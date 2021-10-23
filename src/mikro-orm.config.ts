@@ -1,8 +1,9 @@
 import { MikroORM } from "@mikro-orm/core";
 import { Post } from "./Entities/Post";
+import { User } from "./Entities/User";
 
-const { join } = require("path");
-const { __db_user__, __db_password__, __prod__ } = require("./constants");
+import { join } from "path";
+import { __db_user__, __db_password__, __prod__ } from "./constants";
 
 const dbConfig = {
   type: "postgresql",
@@ -18,5 +19,5 @@ export default {
     path: join(__dirname, "./migrations"),
     pattern: /^[\w-]+\d+\.[tj]s$/,
   },
-  entities: [Post],
+  entities: [Post, User],
 } as Parameters<typeof MikroORM.init>[0];
