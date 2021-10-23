@@ -3,6 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "keywords": [],
+  "author": "https://github.com/Zuruuh",
+  "license": "ISC",
+  "scripts": {
+    "watch": "tsc -w",
+    "serve": "nodemon dist/index.js",
+    "start": "node dist/index.js",
+    "m:c": "npx mikro-orm migration:create --run"
+  },
   "dependencies": {
     "@mikro-orm/cli": "^4.5.9",
     "@mikro-orm/core": "^4.5.9",
@@ -10,17 +19,17 @@
     "@mikro-orm/postgresql": "^4.5.9",
     "pg": "^8.7.1"
   },
-  "scripts": {
-    "watch": "tsc -w",
-    "serve": "nodemon dist/index.js",
-    "start": "node dist/index.js"
-  },
-  "keywords": [],
-  "author": "https://github.com/Zuruuh",
-  "license": "ISC",
   "devDependencies": {
     "@types/node": "^16.11.3",
     "nodemon": "^2.0.14",
+    "ts-node": "^10.4.0",
     "typescript": "^4.4.4"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }
