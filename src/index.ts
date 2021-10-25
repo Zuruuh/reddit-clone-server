@@ -1,29 +1,43 @@
 import "reflect-metadata";
-import { MikroORM } from "@mikro-orm/core";
-import mikroConfig from "./mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import { buildSchema } from "type-graphql";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import redis from "redis";
+import redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__ } from "./constants";
-import { ResolverContext } from "./types";
 import cors from "cors";
 import { COOKIE } from "./constants";
+import { createConnection } from "typeorm";
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
+import { join } from "path";
+import { Upvote } from "./entities/Upvote";
+import { UpvoteResolver } from "./resolvers/upvotes";
 
 const main = async () => {
-  const orm = await MikroORM.init(mikroConfig);
-  await orm.getMigrator().up();
+  const conn = await createConnection({
+    type: "postgres",
+    database: "reddit",
+    username: "admin",
+    password: "admin",
+    logging: true,
+    synchronize: true,
+    port: 5432,
+    migrations: [join(__dirname, "./migrations/*")],
+    entities: [Post, User, Upvote],
+  });
+  await conn.runMigrations();
+
+  // await Post.delete({});
 
   const app = express();
-  console.log("production?: " + __prod__);
 
   const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
+  const Redis = new redis();
   app.use(
     cors({
       origin: "http://localhost:3000",
@@ -34,7 +48,7 @@ const main = async () => {
     session({
       name: COOKIE,
       store: new RedisStore({
-        client: redisClient,
+        client: Redis,
         disableTouch: true,
       }),
       cookie: {
@@ -51,10 +65,14 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [PostResolver, UserResolver],
+      resolvers: [PostResolver, UserResolver, UpvoteResolver],
       validate: false,
     }),
-    context: ({ req, res }): ResolverContext => ({ em: orm.em, req, res }),
+    context: ({ req, res }) => ({
+      req,
+      res,
+      redis: Redis,
+    }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
   });
 
