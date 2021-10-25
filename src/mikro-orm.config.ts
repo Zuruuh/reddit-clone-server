@@ -1,6 +1,6 @@
 import { MikroORM } from "@mikro-orm/core";
-import { Post } from "./Entities/Post";
-import { User } from "./Entities/User";
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
 
 import { join } from "path";
 import { __db_user__, __db_password__, __prod__ } from "./constants";
