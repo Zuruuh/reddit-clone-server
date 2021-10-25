@@ -7,11 +7,10 @@ import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-co
 import { buildSchema } from "type-graphql";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import redis from "redis";
+import redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__ } from "./constants";
-import { ResolverContext } from "./types";
 import cors from "cors";
 import { COOKIE } from "./constants";
 
@@ -23,7 +22,7 @@ const main = async () => {
   console.log("production?: " + __prod__);
 
   const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
+  const Redis = new redis();
   app.use(
     cors({
       origin: "http://localhost:3000",
@@ -34,7 +33,7 @@ const main = async () => {
     session({
       name: COOKIE,
       store: new RedisStore({
-        client: redisClient,
+        client: Redis,
         disableTouch: true,
       }),
       cookie: {
@@ -54,7 +53,12 @@ const main = async () => {
       resolvers: [PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): ResolverContext => ({ em: orm.em, req, res }),
+    context: ({ req, res }) => ({
+      em: orm.em,
+      req,
+      res,
+      redis: Redis,
+    }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
   });
 
